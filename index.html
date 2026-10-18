@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>american experience demo</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<main class="player">
+
+    <div class="player-top">
+        <span class="player-brand">cd player</span>
+        <button id="btn-eject" aria-label="open / eject" class="btn-eject">&#9167; open</button>
+    </div>
+
+    <!-- THE DISC -->
+    <div class="disc-well">
+        <div class="disc" id="disc">
+            <div class="disc-label">
+                <span class="sharpie sharpie-top">american experience</span>
+                <span class="sharpie sharpie-bottom">demo</span>
+            </div>
+            <div class="disc-hub"></div>
+        </div>
+    </div>
+
+    <!-- LCD -->
+    <div class="lcd">
+        <div class="lcd-row">
+            <span class="lcd-label">TRACK</span>
+            <span class="lcd-label">
+                <span id="lcd-repeat"></span>
+                <span id="lcd-mode">ELAPSED</span>
+            </span>
+        </div>
+        <div class="lcd-row lcd-big">
+            <span id="lcd-track">--</span>
+            <span id="lcd-time">--:--</span>
+        </div>
+        <div class="lcd-row">
+            <span id="lcd-status">NO DISC</span>
+        </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="progress" id="progress">
+        <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+        <button id="btn-prev"   aria-label="previous track">|&#9664;&#9664;</button>
+        <button id="btn-rew"    aria-label="rewind">&#9664;&#9664;</button>
+        <button id="btn-play"   aria-label="play / pause" class="btn-play">&#9654;&#10074;&#10074;</button>
+        <button id="btn-ff"     aria-label="fast forward">&#9654;&#9654;</button>
+        <button id="btn-next"   aria-label="next track">&#9654;&#9654;|</button>
+    </div>
+
+    <div class="controls controls-small">
+        <button id="btn-stop"   aria-label="stop">&#9632; stop</button>
+        <button id="btn-repeat" aria-label="repeat">repeat</button>
+        <button id="btn-mode"   aria-label="time display">time</button>
+        <label class="volume">
+            vol
+            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.9">
+        </label>
+    </div>
+
+</main>
+
+<!-- TRACKLIST (the cd insert) -->
+<section class="insert" id="insert">
+    <div class="insert-title">american experience</div>
+    <ol class="tracklist" id="tracklist"></ol>
+</section>
+
+<audio id="audio" src="audio/demo.mp3" preload="metadata"></audio>
+
+<script>
+
+/* -------------------- */
+/* TRACKS */
+/* -------------------- */
+
+// start time of each song (matches the handwritten tracklist)
+const TRACKS = [
+    ["0:00",  "intro"],
+    ["0:30",  "m-1"],
+    ["3:44",  "m-6"],
+    ["6:59",  "m-10"],
+    ["10:53", "m-4"],
+    ["14:49", "i800"],
+    ["17:04", "i696"],
+];
+
+/* -------------------- */
+/* SETUP */
+/* -------------------- */
+
+const audio        = document.getElementById("audio");
+const disc         = document.getElementById("disc");
+const lcdTrack     = document.getElementById("lcd-track");
+const lcdTime      = document.getElementById("lcd-time");
+const lcdMode      = document.getElementById("lcd-mode");
+const lcdRepeat    = document.getElementById("lcd-repeat");
+const lcdStatus    = document.getElementById("lcd-status");
+const progress     = document.getElementById("progress");
+const progressFill = document.getElementById("progress-fill");
+const btnRepeat    = document.getElementById("btn-repeat");
+
+const starts = TRACKS.map(([t]) => {
+    const [m, s] = t.split(":").map(Number);
+    return m * 60 + s;
+});
+
+const names = TRACKS.map(([, name]) => name);
+
+// 0 = off, 1 = repeat one, 2 = repeat all
+let repeat = 0;
+
+// 0 = elapsed in track, 1 = remaining in track, 2 = total elapsed
+let mode = 0;
+const MODES = ["ELAPSED", "REMAIN", "TOTAL"];
+
+let loaded = false;
+
+/* -------------------- */
+/* HELPERS */
+/* -------------------- */
+
+function pad(n) {
+    return String(n).padStart(2, "0");
+}
+
+function fmt(sec) {
+    sec = Math.max(0, Math.floor(sec));
+    return pad(Math.floor(sec / 60)) + ":" + pad(sec % 60);
+}
+
+function trackIndex(t = audio.currentTime) {
+    let i = 0;
+    while (i + 1 < starts.length && t >= starts[i + 1]) i++;
+    return i;
+}
+
+function trackStart(i) {
+    return starts[i];
+}
+
+function trackEnd(i) {
+    return i + 1 < starts.length ? starts[i + 1] : audio.duration;
+}
+
+/* -------------------- */
+/* DISPLAY */
+/* -------------------- */
+
+function render() {
+
+    if (!loaded) return;
+
+    const t = audio.currentTime;
+    const i = trackIndex(t);
+
+    lcdTrack.textContent = pad(i + 1);
+
+    if (mode === 0)      lcdTime.textContent = fmt(t - trackStart(i));
+    else if (mode === 1) lcdTime.textContent = "-" + fmt(trackEnd(i) - t);
+    else                 lcdTime.textContent = fmt(t);
+
+    lcdMode.textContent   = MODES[mode];
+    lcdRepeat.textContent = ["", "REP 1", "REP ALL"][repeat];
+
+    if (audio.paused) {
+        lcdStatus.textContent = audio.currentTime === 0 ? starts.length + " TRACKS  " + fmt(audio.duration) : "PAUSE  " + names[trackIndex()].toUpperCase();
+    } else {
+        lcdStatus.textContent = "PLAY  " + names[i].toUpperCase();
+    }
+
+    progressFill.style.width = (t / audio.duration * 100) + "%";
+
+    rows.forEach((row, n) => row.classList.toggle("current", n === i && t > 0));
+
+    disc.classList.toggle("spinning", !audio.paused);
+}
+
+/* -------------------- */
+/* TRACKLIST */
+/* -------------------- */
+
+const tracklist = document.getElementById("tracklist");
+
+const rows = TRACKS.map(([start, name], n) => {
+    const end = n + 1 < TRACKS.length ? TRACKS[n + 1][0] : "19:54";
+    const li = document.createElement("li");
+    li.innerHTML =
+        '<span class="tl-num">' + pad(n + 1) + '</span>' +
+        '<span class="tl-name">' + name + '</span>' +
+        '<span class="tl-time">' + start + ' – ' + end + '</span>';
+    li.addEventListener("click", () => {
+        if (!loaded) return;
+        goTo(n);
+        lastTrack = n;
+        audio.play();
+    });
+    tracklist.appendChild(li);
+    return li;
+});
+
+/* -------------------- */
+/* TRANSPORT */
+/* -------------------- */
+
+function playPause() {
+    if (!loaded) return;
+    audio.paused ? audio.play() : audio.pause();
+}
+
+function stop() {
+    audio.pause();
+    audio.currentTime = 0;
+    render();
+}
+
+function goTo(i) {
+    i = Math.max(0, Math.min(starts.length - 1, i));
+    audio.currentTime = trackStart(i);
+    render();
+}
+
+function prev() {
+    const i = trackIndex();
+    // like a real cd player: first press goes to start of song, second press goes back a song
+    if (audio.currentTime - trackStart(i) > 3) goTo(i);
+    else goTo(i - 1);
+}
+
+function next() {
+    const i = trackIndex();
+    if (i + 1 < starts.length) goTo(i + 1);
+    else if (repeat === 2) goTo(0);
+}
+
+/* -------------------- */
+/* REPEAT ONE */
+/* -------------------- */
+
+let lastTrack = 0;
+
+audio.addEventListener("timeupdate", () => {
+
+    const i = trackIndex();
+
+    if (repeat === 1 && i !== lastTrack && !seeking) {
+        audio.currentTime = trackStart(lastTrack);
+        return;
+    }
+
+    lastTrack = i;
+    render();
+});
+
+audio.addEventListener("ended", () => {
+    if (repeat === 1) { goTo(lastTrack); audio.play(); }
+    else if (repeat === 2) { goTo(0); audio.play(); }
+    else stop();
+});
+
+/* -------------------- */
+/* HOLD TO SEEK (rew / ff) */
+/* -------------------- */
+
+let seekTimer = null;
+let seeking = false;
+
+function holdSeek(btn, dir) {
+
+    const start = e => {
+        e.preventDefault();
+        if (!loaded) return;
+        seeking = true;
+        btn.classList.add("held");
+        seekTimer = setInterval(() => {
+            audio.currentTime = Math.max(0, Math.min(audio.duration - 0.5, audio.currentTime + dir * 2));
+            lastTrack = trackIndex();
+            render();
+        }, 100);
+    };
+
+    const end = () => {
+        clearInterval(seekTimer);
+        seeking = false;
+        btn.classList.remove("held");
+    };
+
+    btn.addEventListener("pointerdown", start);
+    btn.addEventListener("pointerup", end);
+    btn.addEventListener("pointerleave", end);
+    btn.addEventListener("pointercancel", end);
+}
+
+holdSeek(document.getElementById("btn-rew"), -1);
+holdSeek(document.getElementById("btn-ff"), 1);
+
+/* -------------------- */
+/* BUTTONS */
+/* -------------------- */
+
+document.getElementById("btn-play").addEventListener("click", playPause);
+document.getElementById("btn-stop").addEventListener("click", stop);
+document.getElementById("btn-prev").addEventListener("click", () => { prev(); lastTrack = trackIndex(); });
+document.getElementById("btn-next").addEventListener("click", () => { next(); lastTrack = trackIndex(); });
+
+btnRepeat.addEventListener("click", () => {
+    repeat = (repeat + 1) % 3;
+    btnRepeat.classList.toggle("on", repeat > 0);
+    render();
+});
+
+document.getElementById("btn-eject").addEventListener("click", e => {
+    const open = document.getElementById("insert").classList.toggle("open");
+    e.target.classList.toggle("on", open);
+    e.target.innerHTML = open ? "&#9167; close" : "&#9167; open";
+    if (open) document.getElementById("insert").scrollIntoView({ behavior: "smooth" });
+});
+
+document.getElementById("btn-mode").addEventListener("click", () => {
+    mode = (mode + 1) % 3;
+    render();
+});
+
+document.getElementById("volume").addEventListener("input", e => {
+    audio.volume = e.target.value;
+});
+
+progress.addEventListener("click", e => {
+    if (!loaded) return;
+    const r = progress.getBoundingClientRect();
+    audio.currentTime = (e.clientX - r.left) / r.width * audio.duration;
+    lastTrack = trackIndex();
+    render();
+});
+
+document.addEventListener("keydown", e => {
+    if (e.target.tagName === "INPUT") return;
+    if (e.code === "Space")      { e.preventDefault(); playPause(); }
+    if (e.code === "ArrowRight") { next(); lastTrack = trackIndex(); }
+    if (e.code === "ArrowLeft")  { prev(); lastTrack = trackIndex(); }
+});
+
+/* -------------------- */
+/* LOAD */
+/* -------------------- */
+
+audio.volume = 0.9;
+
+audio.addEventListener("loadedmetadata", () => {
+    loaded = true;
+    render();
+});
+
+audio.addEventListener("play", render);
+audio.addEventListener("pause", render);
+
+audio.addEventListener("error", () => {
+    lcdStatus.textContent = "NO DISC";
+});
+
+</script>
+
+</body>
+
+</html>

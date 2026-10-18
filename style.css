@@ -1,0 +1,468 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    background:#000;
+
+    color:#efefef;
+
+    font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+    min-height:100vh;
+
+    padding:60px 16px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    gap:80px;
+}
+
+/* -------------------- */
+/* PLAYER BODY */
+/* -------------------- */
+
+.player{
+
+    width:340px;
+
+    max-width:100%;
+
+    padding:28px 24px 24px;
+
+    background:#141414;
+
+    border:1px solid #262626;
+
+    border-radius:28px;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:18px;
+}
+
+/* -------------------- */
+/* DISC */
+/* -------------------- */
+
+.disc-well{
+
+    aspect-ratio:1;
+
+    border-radius:50%;
+
+    background:#0a0a0a;
+
+    padding:10px;
+
+    box-shadow:inset 0 2px 10px #000;
+}
+
+.disc{
+
+    position:relative;
+
+    width:100%;
+    height:100%;
+
+    border-radius:50%;
+
+    /* burned cd-r: silver with that greenish-purple dye sheen */
+    background:
+        radial-gradient(circle, transparent 0 30%, rgba(0,0,0,.15) 30.5% 31%, transparent 31.5%),
+        conic-gradient(
+            from 0deg,
+            #b9c2c4, #8fa7a1, #c9b3cf, #e6e6e6,
+            #9fb7b0, #b4a4c4, #d8dcdc, #8fa7a1,
+            #c7bfd3, #b9c2c4
+        );
+
+    box-shadow:0 0 0 1px #333;
+}
+
+.disc.spinning{
+
+    animation:spin 1.8s linear infinite;
+}
+
+@keyframes spin{
+
+    to{
+        transform:rotate(360deg);
+    }
+}
+
+.disc-label{
+
+    position:absolute;
+
+    inset:0;
+
+    pointer-events:none;
+}
+
+.sharpie{
+
+    position:absolute;
+
+    left:0;
+    right:0;
+
+    text-align:center;
+
+    font-family:"Permanent Marker", cursive;
+
+    color:#111;
+
+    line-height:1;
+}
+
+.sharpie-top{
+
+    top:18%;
+
+    font-size:18px;
+
+    transform:rotate(-4deg);
+}
+
+.sharpie-bottom{
+
+    bottom:18%;
+
+    font-size:20px;
+
+    transform:rotate(3deg);
+}
+
+.disc-hub{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    width:30%;
+    height:30%;
+
+    transform:translate(-50%,-50%);
+
+    border-radius:50%;
+
+    background:
+        radial-gradient(circle, #000 0 26%, #2a2a2a 27% 30%, rgba(255,255,255,.35) 31% 100%);
+
+    box-shadow:0 0 0 1px rgba(0,0,0,.2);
+}
+
+/* -------------------- */
+/* LCD */
+/* -------------------- */
+
+.lcd{
+
+    background:#9aa58a;
+
+    color:#1d2416;
+
+    border-radius:6px;
+
+    padding:10px 14px;
+
+    font-family:"Courier New", monospace;
+
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.45);
+}
+
+.lcd-row{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    font-size:11px;
+
+    letter-spacing:1px;
+}
+
+.lcd-big{
+
+    font-size:34px;
+
+    font-weight:bold;
+
+    letter-spacing:2px;
+
+    margin:2px 0;
+}
+
+#lcd-repeat{
+
+    margin-right:6px;
+}
+
+/* -------------------- */
+/* PROGRESS */
+/* -------------------- */
+
+.progress{
+
+    height:14px;
+
+    padding:5px 0;
+
+    cursor:pointer;
+}
+
+.progress::before{
+
+    content:"";
+
+    display:block;
+
+    height:4px;
+
+    background:#2a2a2a;
+
+    border-radius:2px;
+}
+
+.progress-fill{
+
+    height:4px;
+
+    width:0;
+
+    margin-top:-4px;
+
+    background:#efefef;
+
+    border-radius:2px;
+}
+
+/* -------------------- */
+/* CONTROLS */
+/* -------------------- */
+
+.controls{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    gap:8px;
+}
+
+button{
+
+    flex:1;
+
+    height:44px;
+
+    background:#222;
+
+    color:#efefef;
+
+    border:1px solid #333;
+
+    border-radius:8px;
+
+    font-size:12px;
+
+    letter-spacing:-2px;
+
+    cursor:pointer;
+
+    touch-action:manipulation;
+
+    user-select:none;
+
+    -webkit-user-select:none;
+}
+
+button:hover{
+
+    background:#2c2c2c;
+}
+
+button:active,
+button.held{
+
+    background:#181818;
+
+    transform:translateY(1px);
+}
+
+.btn-play{
+
+    flex:1.4;
+
+    font-size:14px;
+}
+
+.controls-small button{
+
+    height:32px;
+
+    font-size:11px;
+
+    letter-spacing:1px;
+
+    text-transform:uppercase;
+}
+
+button.on{
+
+    color:#000;
+
+    background:#efefef;
+}
+
+.volume{
+
+    flex:1.6;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    font-size:11px;
+
+    letter-spacing:1px;
+
+    text-transform:uppercase;
+
+    color:#aaa;
+}
+
+.volume input{
+
+    width:100%;
+
+    accent-color:#efefef;
+}
+
+/* -------------------- */
+/* INSERT (tracklist) */
+/* -------------------- */
+
+.insert{
+
+    display:none;
+
+    width:340px;
+
+    max-width:100%;
+
+    font-family:"Courier New", monospace;
+}
+
+.insert.open{
+
+    display:block;
+}
+
+.insert-title{
+
+    font-family:"Permanent Marker", cursive;
+
+    font-size:20px;
+
+    margin-bottom:24px;
+}
+
+.tracklist{
+
+    list-style:none;
+}
+
+.tracklist li{
+
+    display:grid;
+
+    grid-template-columns:36px 1fr auto;
+
+    gap:12px;
+
+    padding:10px 0;
+
+    border-bottom:1px dashed #2a2a2a;
+
+    cursor:pointer;
+
+    color:#aaa;
+}
+
+.tracklist li:hover{
+
+    color:#fff;
+}
+
+.tracklist li.current{
+
+    color:#fff;
+}
+
+.tracklist li.current .tl-name::after{
+
+    content:" ◂";
+}
+
+.tl-num,
+.tl-time{
+
+    opacity:.6;
+}
+
+/* -------------------- */
+/* TOP (open / eject) */
+/* -------------------- */
+
+.player-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+}
+
+.player-brand{
+
+    font-size:11px;
+
+    letter-spacing:2px;
+
+    text-transform:uppercase;
+
+    color:#666;
+}
+
+.btn-eject{
+
+    flex:none;
+
+    height:28px;
+
+    padding:0 12px;
+
+    font-size:11px;
+
+    letter-spacing:1px;
+
+    text-transform:uppercase;
+}
